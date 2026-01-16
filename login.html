@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="th" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IT Dashboard Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    * {
+      font-family: 'IBM Plex Sans Thai', sans-serif;
+    }
+    
+    .card-hover {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .status-indicator {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.4s ease-in;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .modal-backdrop {
+      backdrop-filter: blur(8px);
+      animation: fadeIn 0.2s ease-in;
+    }
+    
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .pin-input {
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+      text-align: center;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      transition: all 0.2s;
+    }
+
+    .pin-input:focus {
+      border-color: #3b82f6;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .pin-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #cbd5e1;
+      transition: all 0.2s;
+    }
+
+    .pin-dot.filled {
+      background: #3b82f6;
+      transform: scale(1.2);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="h-full">
+  <div id="app" class="w-full h-full overflow-auto" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #06b6d4 100%);"><!-- Login Screen -->
+   <div id="login-screen" class="min-h-full flex items-center justify-center p-6">
+    <div class="w-full max-w-md"><!-- Login Card -->
+     <div id="login-card" class="rounded-3xl p-10 fade-in" style="background: rgba(255, 255, 255, 0.95); box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);">
+      <div class="text-center mb-8">
+       <div class="w-20 h-20 rounded-2xl mx-auto mb-4 flex items-center justify-center" style="background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+       </div>
+       <h2 class="text-3xl font-bold mb-2" style="color: #1e293b;">เข้าสู่ระบบ</h2>
+       <p class="text-sm" style="color: #64748b;">ระบบจัดการ IT Dashboard</p>
+      </div>
+      <form id="login-form">
+       <div class="mb-6"><label for="login-username" class="block text-sm font-semibold mb-3" style="color: #475569;">ชื่อผู้ใช้</label> <input type="text" id="login-username" required class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors" style="border-color: #e2e8f0; background: #f8fafc;" placeholder="กรอกชื่อผู้ใช้">
+       </div>
+       <div class="mb-6"><label class="block text-sm font-semibold mb-3" style="color: #475569;">รหัส PIN (4 หลัก)</label>
+        <div class="flex gap-3 justify-center mb-4"><input type="password" maxlength="1" class="pin-input" data-index="0" inputmode="numeric" pattern="[0-9]"> <input type="password" maxlength="1" class="pin-input" data-index="1" inputmode="numeric" pattern="[0-9]"> <input type="password" maxlength="1" class="pin-input" data-index="2" inputmode="numeric" pattern="[0-9]"> <input type="password" maxlength="1" class="pin-input" data-index="3" inputmode="numeric" pattern="[0-9]">
+        </div>
+       </div><button type="submit" id="login-btn" class="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-white transition-all mb-4" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);"> <span id="login-text">เข้าสู่ระบบ</span> </button> <button type="button" id="show-register-btn" class="w-full px-6 py-3 rounded-xl font-medium transition-colors" style="background: #f1f5f9; color: #64748b;"> ลงทะเบียนผู้ใช้ใหม่ </button>
+      </form>
+     </div><!-- Register Card -->
+     <div id="register-card" class="rounded-3xl p-10 fade-in" style="background: rgba(255, 255, 255, 0.95); box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3); display: none;">
+      <div class="text-center mb-8">
+       <div class="w-20 h-20 rounded-2xl mx-auto mb-4 flex items-center justify-center" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+        </svg>
+       </div>
+       <h2 class="text-3xl font-bold mb-2" style="color: #1e293b;">ลงทะเบียน</h2>
+       <p class="text-sm" style="color: #64748b;">สร้างบัญชีผู้ใช้ใหม่</p>
+      </div>
+      <form id="register-form">
+       <div class="mb-6"><label for="register-username" class="block text-sm font-semibold mb-3" style="color: #475569;">ชื่อผู้ใช้</label> <input type="text" id="register-username" required class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors" style="border-color: #e2e8f0; background: #f8fafc;" placeholder="กรอกชื่อผู้ใช้">
+       </div>
+       <div class="mb-6"><label class="block text-sm font-semibold mb-3" style="color: #475569;">ตั้งรหัส PIN (4 หลัก)</label>
+        <div class="flex gap-3 justify-center mb-4"><input type="password" maxlength="1" class="pin-input-register" data-index="0" inputmode="numeric" pattern="[0-9]"> <input type="password" maxlength="1" class="pin-input-register" data-index="1" inputmode="numeric" pattern="[0-9]"> <input type="password" maxlength="1" class="pin-input-register" data-index="2" inputmode="numeric" pattern="[0-9]"> <input type="password" maxlength="1" class="pin-input-register" data-index="3" inputmode="numeric" pattern="[0-9]">
+        </div>
+       </div><button type="submit" id="register-btn" class="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-white transition-all mb-4" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"> <span id="register-text">ลงทะเบียน</span> </button> <button type="button" id="back-to-login-btn" class="w-full px-6 py-3 rounded-xl font-medium transition-colors" style="background: #f1f5f9; color: #64748b;"> กลับไปเข้าสู่ระบบ </button>
+      </form>
+     </div>
+    </div>
+   </div><!-- Main Dashboard (Hidden by default) -->
+   <div id="dashboard-screen" style="display: none;"><!-- Header -->
+    <header class="sticky top-0 z-40" style="background: rgba(30, 58, 138, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+     <div class="max-w-7xl mx-auto px-6 py-5">
+      <div class="flex items-center justify-between">
+       <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);">
+         <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+         </svg>
+        </div>
+        <div>
+         <h1 id="page-title" class="text-2xl font-bold text-white">ระบบจัดการ IT Dashboard</h1>
+         <p class="text-sm text-white/70">ผู้ใช้: <span id="current-username" class="font-medium"></span></p>
+        </div>
+       </div>
+       <div class="flex items-center gap-3"><button id="add-system-btn" class="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white transition-all" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+         </svg><span id="add-button-text">เพิ่มระบบใหม่</span> </button> <button id="logout-btn" class="px-4 py-3 rounded-xl font-medium text-white transition-colors" style="background: rgba(239, 68, 68, 0.2);">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+         </svg></button>
+       </div>
+      </div>
+     </div>
+    </header><!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8"><!-- Stats Cards -->
+     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div class="rounded-2xl p-6 card-hover" style="background: rgba(255, 255, 255, 0.95); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
+       <div class="flex items-center justify-between mb-2"><span class="text-sm font-medium" style="color: #64748b;">ทั้งหมด</span>
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: #dbeafe;">
+         <svg class="w-5 h-5" style="color: #3b82f6;" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+         </svg>
+        </div>
+       </div>
+       <div id="total-count" class="text-3xl font-bold" style="color: #1e293b;">
+        0
+       </div>
+      </div>
+      <div class="rounded-2xl p-6 card-hover" style="background: rgba(255, 255, 255, 0.95); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
+       <div class="flex items-center justify-between mb-2"><span class="text-sm font-medium" style="color: #64748b;">ใช้งานได้</span>
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: #dcfce7;">
+         <svg class="w-5 h-5" style="color: #10b981;" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+         </svg>
+        </div>
+       </div>
+       <div id="active-count" class="text-3xl font-bold" style="color: #10b981;">
+        0
+       </div>
+      </div>
+      <div class="rounded-2xl p-6 card-hover" style="background: rgba(255, 255, 255, 0.95); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
+       <div class="flex items-center justify-between mb-2"><span class="text-sm font-medium" style="color: #64748b;">ปิดปรับปรุง</span>
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: #fef3c7;">
+         <svg class="w-5 h-5" style="color: #f59e0b;" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+         </svg>
+        </div>
+       </div>
+       <div id="maintenance-count" class="text-3xl font-bold" style="color: #f59e0b;">
+        0
+       </div>
+      </div>
+      <div class="rounded-2xl p-6 card-hover" style="background: rgba(255, 255, 255, 0.95); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
+       <div class="flex items-center justify-between mb-2"><span class="text-sm font-medium" style="color: #64748b;">ขัดข้อง</span>
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: #fee2e2;">
+         <svg class="w-5 h-5" style="color: #ef4444;" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+         </svg>
+        </div>
+       </div>
+       <div id="offline-count" class="text-3xl font-bold" style="color: #ef4444;">
+        0
+       </div>
+      </div>
+     </div><!-- Filter Tabs -->
+     <div class="flex flex-wrap gap-3 mb-6"><button class="filter-btn px-5 py-2.5 rounded-xl font-medium transition-all" data-filter="all" style="background: rgba(255, 255, 255, 0.95); color: #1e293b; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);"> ทั้งหมด </button> <button class="filter-btn px-5 py-2.5 rounded-xl font-medium transition-all" data-filter="Network" style="background: rgba(255, 255, 255, 0.2); color: white;"> เครือข่าย </button> <button class="filter-btn px-5 py-2.5 rounded-xl font-medium transition-all" data-filter="Server" style="background: rgba(255, 255, 255, 0.2); color: white;"> เซิร์ฟเวอร์ </button> <button class="filter-btn px-5 py-2.5 rounded-xl font-medium transition-all" data-filter="Database" style="background: rgba(255, 255, 255, 0.2); color: white;"> ฐานข้อมูล </button> <button class="filter-btn px-5 py-2.5 rounded-xl font-medium transition-all" data-filter="Application" style="background: rgba(255, 255, 255, 0.2); color: white;"> แอปพลิเคชัน </button> <button class="filter-btn px-5 py-2.5 rounded-xl font-medium transition-all" data-filter="Security" style="background: rgba(255, 255, 255, 0.2); color: white;"> ความปลอดภัย </button> <button class="filter-btn px-5 py-2.5 rounded-xl font-medium transition-all" data-filter="Other" style="background: rgba(255, 255, 255, 0.2); color: white;"> อื่นๆ </button>
+     </div><!-- Systems Grid -->
+     <div id="systems-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+     </div><!-- Empty State -->
+     <div id="empty-state" class="text-center py-20 fade-in" style="display: none;">
+      <div class="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center" style="background: rgba(255, 255, 255, 0.2);">
+       <svg class="w-12 h-12 text-white/60" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+       </svg>
+      </div>
+      <h3 class="text-2xl font-bold text-white mb-2">ยังไม่มีระบบในรายการ</h3>
+      <p class="text-white/70 mb-6">เริ่มต้นโดยการเพิ่มระบบ IT แรกของคุณ</p><button id="empty-add-btn" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white transition-all" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+       </svg> เพิ่มระบบใหม่ </button>
+     </div>
+    </main>
+   </div><!-- Add/Edit Modal -->
+   <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center p-6 modal-backdrop" style="background: rgba(0, 0, 0, 0.5); display: none;">
+    <div class="w-full max-w-2xl rounded-2xl p-8 fade-in" style="background: white; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3); max-height: 90%; overflow-y: auto;">
+     <div class="flex items-center justify-between mb-6">
+      <h2 id="modal-title" class="text-2xl font-bold" style="color: #1e293b;">เพิ่มระบบใหม่</h2><button id="close-modal" class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors" style="background: #f1f5f9; color: #64748b;">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+       </svg></button>
+     </div>
+     <form id="system-form">
+      <div class="space-y-5">
+       <div><label for="system-name" class="block text-sm font-semibold mb-2" style="color: #475569;">ชื่อระบบ *</label> <input type="text" id="system-name" required class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors" style="border-color: #e2e8f0; background: #f8fafc;" placeholder="เช่น ERP System, CRM Dashboard">
+       </div>
+       <div><label for="system-url" class="block text-sm font-semibold mb-2" style="color: #475569;">URL / ลิงก์ *</label> <input type="url" id="system-url" required class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors" style="border-color: #e2e8f0; background: #f8fafc;" placeholder="https://example.com/dashboard">
+       </div>
+       <div><label for="system-category" class="block text-sm font-semibold mb-2" style="color: #475569;">หมวดหมู่ *</label> <select id="system-category" required class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors" style="border-color: #e2e8f0; background: #f8fafc;"> <option value="">เลือกหมวดหมู่</option> <option value="Network">เครือข่าย</option> <option value="Server">เซิร์ฟเวอร์</option> <option value="Database">ฐานข้อมูล</option> <option value="Application">แอปพลิเคชัน</option> <option value="Security">ความปลอดภัย</option> <option value="Other">อื่นๆ</option> </select>
+       </div>
+       <div><label for="system-status" class="block text-sm font-semibold mb-2" style="color: #475569;">สถานะ *</label> <select id="system-status" required class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors" style="border-color: #e2e8f0; background: #f8fafc;"> <option value="active">ใช้งานได้</option> <option value="maintenance">ปิดปรับปรุง</option> <option value="offline">ขัดข้อง</option> </select>
+       </div>
+       <div><label for="system-description" class="block text-sm font-semibold mb-2" style="color: #475569;">รายละเอียด</label> <textarea id="system-description" rows="3" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors resize-none" style="border-color: #e2e8f0; background: #f8fafc;" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
+       </div>
+      </div>
+      <div class="flex gap-3 mt-8"><button type="submit" id="save-btn" class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white transition-all" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);"> <span id="save-text">บันทึก</span> </button> <button type="button" id="cancel-btn" class="px-6 py-3 rounded-xl font-semibold transition-colors" style="background: #f1f5f9; color: #64748b;"> ยกเลิก </button>
+      </div>
+     </form>
+    </div>
+   </div><!-- Delete Confirmation Modal -->
+   <div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center p-6 modal-backdrop" style="background: rgba(0, 0, 0, 0.5); display: none;">
+    <div class="w-full max-w-md rounded-2xl p-8 fade-in" style="background: white; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);">
+     <div class="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style="background: #fee2e2;">
+      <svg class="w-8 h-8" style="color: #ef4444;" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+     </div>
+     <h3 class="text-xl font-bold text-center mb-2" style="color: #1e293b;">ยืนยันการลบ</h3>
+     <p class="text-center mb-6" style="color: #64748b;">คุณแน่ใจหรือไม่ที่จะลบระบบนี้?<br>
+      การกระทำนี้ไม่สามารถยกเลิกได้</p>
+     <div class="flex gap-3"><button id="confirm-delete-btn" class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white transition-all" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);"> <span id="delete-text">ลบ</span> </button> <button id="cancel-delete-btn" class="flex-1 px-6 py-3 rounded-xl font-semibold transition-colors" style="background: #f1f5f9; color: #64748b;"> ยกเลิก </button>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    let allData = [];
+    let allSystems = [];
+    let currentFilter = 'all';
+    let editingSystem = null;
+    let deletingSystem = null;
+    let isLoading = false;
+    let currentUser = null;
+
+    const defaultConfig = {
+      page_title: 'ระบบจัดการ IT Dashboard',
+      page_subtitle: 'จัดการและเข้าถึงระบบ IT ทั้งหมดในที่เดียว',
+      add_button_text: 'เพิ่มระบบใหม่',
+      primary_bg: '#1e3a8a',
+      accent_color: '#3b82f6',
+      success_color: '#10b981',
+      text_color: '#1e293b',
+      font_family: 'IBM Plex Sans Thai',
+      font_size: 16
+    };
+
+    // Data SDK Handler
+    const dataHandler = {
+      onDataChanged(data) {
+        allData = data;
+        
+        if (currentUser) {
+          allSystems = data.filter(item => item.type === 'system' && item.user_id === currentUser.user_id);
+          updateStats();
+          renderSystems();
+        }
+      }
+    };
+
+    // Initialize SDKs
+    async function initializeApp() {
+      if (window.dataSdk) {
+        const result = await window.dataSdk.init(dataHandler);
+        if (!result.isOk) {
+          console.error('Failed to initialize data SDK');
+        }
+      }
+
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange,
+          mapToCapabilities,
+          mapToEditPanelValues
+        });
+      }
+
+      setupPinInputs();
+    }
+
+    async function onConfigChange(config) {
+      const pageTitle = document.getElementById('page-title');
+      const addButtonText = document.getElementById('add-button-text');
+
+      if (pageTitle) pageTitle.textContent = config.page_title || defaultConfig.page_title;
+      if (addButtonText) addButtonText.textContent = config.add_button_text || defaultConfig.add_button_text;
+
+      const customFont = config.font_family || defaultConfig.font_family;
+      document.querySelectorAll('*').forEach(el => {
+        el.style.fontFamily = `${customFont}, sans-serif`;
+      });
+
+      const baseSize = config.font_size || defaultConfig.font_size;
+      document.body.style.fontSize = `${baseSize}px`;
+    }
+
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [
+          {
+            get: () => config.primary_bg || defaultConfig.primary_bg,
+            set: (value) => {
+              config.primary_bg = value;
+              window.elementSdk.setConfig({ primary_bg: value });
+            }
+          },
+          {
+            get: () => config.accent_color || defaultConfig.accent_color,
+            set: (value) => {
+              config.accent_color = value;
+              window.elementSdk.setConfig({ accent_color: value });
+            }
+          },
+          {
+            get: () => config.success_color || defaultConfig.success_color,
+            set: (value) => {
+              config.success_color = value;
+              window.elementSdk.setConfig({ success_color: value });
+            }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (value) => {
+            config.font_family = value;
+            window.elementSdk.setConfig({ font_family: value });
+          }
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (value) => {
+            config.font_size = value;
+            window.elementSdk.setConfig({ font_size: value });
+          }
+        }
+      };
+    }
+
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ['page_title', config.page_title || defaultConfig.page_title],
+        ['page_subtitle', config.page_subtitle || defaultConfig.page_subtitle],
+        ['add_button_text', config.add_button_text || defaultConfig.add_button_text]
+      ]);
+    }
+
+    // PIN Input Setup
+    function setupPinInputs() {
+      const loginPins = document.querySelectorAll('.pin-input');
+      const registerPins = document.querySelectorAll('.pin-input-register');
+
+      function handlePinInput(inputs) {
+        inputs.forEach((input, index) => {
+          input.addEventListener('input', (e) => {
+            const value = e.target.value;
+            if (value && /^[0-9]$/.test(value)) {
+              if (index < inputs.length - 1) {
+                inputs[index + 1].focus();
+              }
+            }
+          });
+
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !input.value && index > 0) {
+              inputs[index - 1].focus();
+            }
+          });
+
+          input.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const pasteData = e.clipboardData.getData('text');
+            const digits = pasteData.match(/\d/g);
+            if (digits) {
+              digits.slice(0, inputs.length - index).forEach((digit, i) => {
+                if (inputs[index + i]) {
+                  inputs[index + i].value = digit;
+                }
+              });
+              const lastFilledIndex = Math.min(index + digits.length - 1, inputs.length - 1);
+              inputs[lastFilledIndex].focus();
+            }
+          });
+        });
+      }
+
+      handlePinInput(loginPins);
+      handlePinInput(registerPins);
+    }
+
+    function getPinValue(className) {
+      const inputs = document.querySelectorAll(`.${className}`);
+      return Array.from(inputs).map(input => input.value).join('');
+    }
+
+    function clearPinInputs(className) {
+      document.querySelectorAll(`.${className}`).forEach(input => input.value = '');
+    }
+
+    // Login Form Handler
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (isLoading) return;
+      isLoading = true;
+
+      const loginBtn = document.getElementById('login-btn');
+      const loginText = document.getElementById('login-text');
+      loginBtn.disabled = true;
+      loginText.innerHTML = '<div class="spinner"></div>';
+
+      const username = document.getElementById('login-username').value.trim();
+      const pin = getPinValue('pin-input');
+
+      if (pin.length !== 4) {
+        showToast('กรุณากรอกรหัส PIN 4 หลัก', 'error');
+        isLoading = false;
+        loginBtn.disabled = false;
+        loginText.textContent = 'เข้าสู่ระบบ';
+        return;
+      }
+
+      // Find user
+      const user = allData.find(item => 
+        item.type === 'user' && 
+        item.username === username && 
+        item.pin === pin
+      );
+
+      isLoading = false;
+      loginBtn.disabled = false;
+      loginText.textContent = 'เข้าสู่ระบบ';
+
+      if (user) {
+        currentUser = { user_id: user.__backendId, username: user.username };
+        showDashboard();
+        showToast('เข้าสู่ระบบสำเร็จ', 'success');
+      } else {
+        showToast('ชื่อผู้ใช้หรือรหัส PIN ไม่ถูกต้อง', 'error');
+        clearPinInputs('pin-input');
+      }
+    });
+
+    // Register Form Handler
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (isLoading) return;
+      isLoading = true;
+
+      const registerBtn = document.getElementById('register-btn');
+      const registerText = document.getElementById('register-text');
+      registerBtn.disabled = true;
+      registerText.innerHTML = '<div class="spinner"></div>';
+
+      const username = document.getElementById('register-username').value.trim();
+      const pin = getPinValue('pin-input-register');
+
+      if (pin.length !== 4) {
+        showToast('กรุณากรอกรหัส PIN 4 หลัก', 'error');
+        isLoading = false;
+        registerBtn.disabled = false;
+        registerText.textContent = 'ลงทะเบียน';
+        return;
+      }
+
+      // Check if username exists
+      const existingUser = allData.find(item => 
+        item.type === 'user' && item.username === username
+      );
+
+      if (existingUser) {
+        showToast('ชื่อผู้ใช้นี้ถูกใช้งานแล้ว', 'error');
+        isLoading = false;
+        registerBtn.disabled = false;
+        registerText.textContent = 'ลงทะเบียน';
+        return;
+      }
+
+      const result = await window.dataSdk.create({
+        type: 'user',
+        username: username,
+        pin: pin,
+        created_at: new Date().toISOString()
+      });
+
+      isLoading = false;
+      registerBtn.disabled = false;
+      registerText.textContent = 'ลงทะเบียน';
+
+      if (result.isOk) {
+        showToast('ลงทะเบียนสำเร็จ กรุณาเข้าสู่ระบบ', 'success');
+        showLoginCard();
+        document.getElementById('register-form').reset();
+        clearPinInputs('pin-input-register');
+      } else {
+        showToast('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง', 'error');
+      }
+    });
+
+    // Show/Hide Forms
+    document.getElementById('show-register-btn').addEventListener('click', () => {
+      document.getElementById('login-card').style.display = 'none';
+      document.getElementById('register-card').style.display = 'block';
+    });
+
+    document.getElementById('back-to-login-btn').addEventListener('click', showLoginCard);
+
+    function showLoginCard() {
+      document.getElementById('login-card').style.display = 'block';
+      document.getElementById('register-card').style.display = 'none';
+    }
+
+    function showDashboard() {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('dashboard-screen').style.display = 'block';
+      document.getElementById('current-username').textContent = currentUser.username;
+      
+      allSystems = allData.filter(item => item.type === 'system' && item.user_id === currentUser.user_id);
+      updateStats();
+      renderSystems();
+    }
+
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      currentUser = null;
+      allSystems = [];
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('dashboard-screen').style.display = 'none';
+      document.getElementById('login-form').reset();
+      clearPinInputs('pin-input');
+      showToast('ออกจากระบบสำเร็จ', 'success');
+    });
+
+    // Update Statistics
+    function updateStats() {
+      const total = allSystems.length;
+      const active = allSystems.filter(s => s.status === 'active').length;
+      const maintenance = allSystems.filter(s => s.status === 'maintenance').length;
+      const offline = allSystems.filter(s => s.status === 'offline').length;
+
+      document.getElementById('total-count').textContent = total;
+      document.getElementById('active-count').textContent = active;
+      document.getElementById('maintenance-count').textContent = maintenance;
+      document.getElementById('offline-count').textContent = offline;
+    }
+
+    // Render Systems
+    function renderSystems() {
+      const grid = document.getElementById('systems-grid');
+      const emptyState = document.getElementById('empty-state');
+      
+      const filteredSystems = currentFilter === 'all' 
+        ? allSystems 
+        : allSystems.filter(s => s.category === currentFilter);
+
+      if (filteredSystems.length === 0) {
+        grid.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      grid.style.display = 'grid';
+      emptyState.style.display = 'none';
+
+      grid.innerHTML = filteredSystems.map(system => {
+        const statusConfig = {
+          active: { label: 'ใช้งานได้', color: '#10b981', bg: '#dcfce7' },
+          maintenance: { label: 'ปิดปรับปรุง', color: '#f59e0b', bg: '#fef3c7' },
+          offline: { label: 'ขัดข้อง', color: '#ef4444', bg: '#fee2e2' }
+        }[system.status];
+
+        const categoryIcons = {
+          Network: 'M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0',
+          Server: 'M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01',
+          Database: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4',
+          Application: 'M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z',
+          Security: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+          Other: 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01'
+        };
+
+        return `
+          <div class="rounded-2xl p-6 card-hover fade-in" style="background: rgba(255, 255, 255, 0.95); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
+            <div class="flex items-start justify-between mb-4">
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: ${statusConfig.bg};">
+                <svg class="w-6 h-6" style="color: ${statusConfig.color};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${categoryIcons[system.category] || categoryIcons.Other}"/>
+                </svg>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="status-indicator w-2 h-2 rounded-full" style="background: ${statusConfig.color};"></span>
+                <span class="text-xs font-medium" style="color: ${statusConfig.color};">${statusConfig.label}</span>
+              </div>
+            </div>
+
+            <h3 class="text-lg font-bold mb-2" style="color: #1e293b;">${system.system_name}</h3>
+            <p class="text-sm mb-1" style="color: #64748b;">${system.category}</p>
+            ${system.description ? `<p class="text-sm mb-4" style="color: #94a3b8;">${system.description}</p>` : '<div class="mb-4"></div>'}
+
+            <div class="flex gap-2">
+              <a href="${system.url}" target="_blank" rel="noopener noreferrer" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-white transition-all" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                </svg>
+                เปิด
+              </a>
+              <button class="edit-btn px-4 py-2.5 rounded-xl transition-colors" data-id="${system.__backendId}" style="background: #f1f5f9; color: #64748b;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </button>
+              <button class="delete-btn px-4 py-2.5 rounded-xl transition-colors" data-id="${system.__backendId}" style="background: #fee2e2; color: #ef4444;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => handleEdit(btn.dataset.id));
+      });
+
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => handleDeleteClick(btn.dataset.id));
+      });
+    }
+
+    // Handle Filter
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentFilter = btn.dataset.filter;
+        
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          b.style.background = 'rgba(255, 255, 255, 0.2)';
+          b.style.color = 'white';
+          b.style.boxShadow = 'none';
+        });
+        
+        btn.style.background = 'rgba(255, 255, 255, 0.95)';
+        btn.style.color = '#1e293b';
+        btn.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+        
+        renderSystems();
+      });
+    });
+
+    // Modal Controls
+    function showModal(editing = false) {
+      const modal = document.getElementById('modal');
+      const modalTitle = document.getElementById('modal-title');
+      modal.style.display = 'flex';
+      modalTitle.textContent = editing ? 'แก้ไขระบบ' : 'เพิ่มระบบใหม่';
+    }
+
+    function hideModal() {
+      const modal = document.getElementById('modal');
+      modal.style.display = 'none';
+      editingSystem = null;
+      document.getElementById('system-form').reset();
+    }
+
+    function showDeleteModal() {
+      document.getElementById('delete-modal').style.display = 'flex';
+    }
+
+    function hideDeleteModal() {
+      document.getElementById('delete-modal').style.display = 'none';
+      deletingSystem = null;
+    }
+
+    // Handle Add
+    document.getElementById('add-system-btn').addEventListener('click', () => {
+      if (allSystems.length >= 999) {
+        showToast('ถึงขีดจำกัด 999 ระบบแล้ว กรุณาลบบางระบบก่อน', 'error');
+        return;
+      }
+      showModal(false);
+    });
+
+    document.getElementById('empty-add-btn').addEventListener('click', () => {
+      if (allSystems.length >= 999) {
+        showToast('ถึงขีดจำกัด 999 ระบบแล้ว กรุณาลบบางระบบก่อน', 'error');
+        return;
+      }
+      showModal(false);
+    });
+
+    // Handle Edit
+    function handleEdit(id) {
+      editingSystem = allSystems.find(s => s.__backendId === id);
+      if (!editingSystem) return;
+
+      document.getElementById('system-name').value = editingSystem.system_name;
+      document.getElementById('system-url').value = editingSystem.url;
+      document.getElementById('system-category').value = editingSystem.category;
+      document.getElementById('system-status').value = editingSystem.status;
+      document.getElementById('system-description').value = editingSystem.description || '';
+
+      showModal(true);
+    }
+
+    // Handle Delete Click
+    function handleDeleteClick(id) {
+      deletingSystem = allSystems.find(s => s.__backendId === id);
+      if (!deletingSystem) return;
+      showDeleteModal();
+    }
+
+    // Handle Form Submit
+    document.getElementById('system-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (isLoading) return;
+      isLoading = true;
+
+      const saveBtn = document.getElementById('save-btn');
+      const saveText = document.getElementById('save-text');
+      saveBtn.disabled = true;
+      saveText.innerHTML = '<div class="spinner"></div>';
+
+      const formData = {
+        type: 'system',
+        user_id: currentUser.user_id,
+        system_name: document.getElementById('system-name').value,
+        url: document.getElementById('system-url').value,
+        category: document.getElementById('system-category').value,
+        status: document.getElementById('system-status').value,
+        description: document.getElementById('system-description').value,
+        created_at: editingSystem ? editingSystem.created_at : new Date().toISOString()
+      };
+
+      let result;
+      if (editingSystem) {
+        result = await window.dataSdk.update({ ...formData, __backendId: editingSystem.__backendId });
+      } else {
+        result = await window.dataSdk.create(formData);
+      }
+
+      isLoading = false;
+      saveBtn.disabled = false;
+      saveText.textContent = 'บันทึก';
+
+      if (result.isOk) {
+        hideModal();
+        showToast(editingSystem ? 'แก้ไขระบบสำเร็จ' : 'เพิ่มระบบสำเร็จ', 'success');
+      } else {
+        showToast('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง', 'error');
+      }
+    });
+
+    // Handle Delete Confirm
+    document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+      if (!deletingSystem || isLoading) return;
+      
+      isLoading = true;
+      const deleteBtn = document.getElementById('confirm-delete-btn');
+      const deleteText = document.getElementById('delete-text');
+      deleteBtn.disabled = true;
+      deleteText.innerHTML = '<div class="spinner"></div>';
+
+      const result = await window.dataSdk.delete(deletingSystem);
+
+      isLoading = false;
+      deleteBtn.disabled = false;
+      deleteText.textContent = 'ลบ';
+
+      if (result.isOk) {
+        hideDeleteModal();
+        showToast('ลบระบบสำเร็จ', 'success');
+      } else {
+        showToast('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง', 'error');
+      }
+    });
+
+    // Modal Close Handlers
+    document.getElementById('close-modal').addEventListener('click', hideModal);
+    document.getElementById('cancel-btn').addEventListener('click', hideModal);
+    document.getElementById('cancel-delete-btn').addEventListener('click', hideDeleteModal);
+
+    // Toast Notification
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      const bgColor = type === 'success' ? '#10b981' : '#ef4444';
+      toast.className = 'fixed top-6 right-6 z-50 px-6 py-4 rounded-xl text-white font-medium shadow-lg fade-in';
+      toast.style.background = bgColor;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Initialize
+    initializeApp();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bec0a9d830945cc',t:'MTc2ODU1MDAzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
