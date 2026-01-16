@@ -1,124 +1,27 @@
-
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <title>IT Dashboard Manager</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai&display=swap" rel="stylesheet">
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="assets/css/main.css">
 </head>
+
 <body>
-    <script>
-      /* ====== AUTH / SESSION ====== */
-
-let users = [];
-let allData = [];
-let allSystems = [];
-
-function getSession(){
-  const t = sessionStorage.getItem('AUTH_TOKEN');
-  if(!t) return null;
-  return JSON.parse(atob(t));
-}
-
-function createToken(user){
-  return btoa(JSON.stringify({
-    uid: user.rowId,
-    role: user.role,
-    ts: Date.now()
-  }));
-}
-
-const PERMISSIONS = {
-  admin: { create:true, update:true, delete:true },
-  manager: { create:true, update:true, delete:false },
-  executive: { create:false, update:false, delete:false }
-};
-
-function can(action){
-  const s = getSession();
-  if(!s) return false;
-  return PERMISSIONS[s.role]?.[action] === true;
-}
-
-async function loadAllData(){
-  try {
-    const [usersRes, systemsRes] = await Promise.all([
-      fetch(API_URL + '?action=users'),
-      fetch(API_URL + '?action=systems')
-    ]);
-
-    const usersJson = await usersRes.json();
-    const systemsJson = await systemsRes.json();
-
-    users = usersJson.data || [];
-    allData = systemsJson.data || [];
-
-  } catch (e) {
-    showToast('โหลดข้อมูลไม่สำเร็จ', 'error');
-  }
-}
-
-if (user) {
-  const token = createToken(user);
-  sessionStorage.setItem('AUTH_TOKEN', token);
-
-  currentUser = {
-    user_id: user.rowId,
-    username: user.username,
-    role: user.role
-  };
-
-  showDashboard();
-}
-
-function showDashboard() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('dashboard-screen').style.display = 'block';
-  document.getElementById('current-username').textContent = currentUser.username;
-
-  loadAllData().then(() => {
-    applyRoleData();
-    updateStats();
-    renderSystems();
-  });
-}
-
-
-
-  const API_URL = 'https://script.googleusercontent.com/a/macros/thaimooc.ac.th/echo?user_content_key=AehSKLil7u_l7Bdp3Nt7NFSJjpZG9qOm8ldRf5ohJ76XxobuJtP9OVZ7RYhGX5v_q0SZKiqJRU2ka6_-Fcsh4jXDnP6js3wRUOMnhzOTri3zlab8S95T2YDXyU_gparnyajg2vs6bc2Y8xDaTzDxoKdONx6eQ1nW4BWfGNbrlP3BBlwPE1i6RsHLiZbbjMr2p9ofU-GQv9-z_fUY5xBLyniwB9FgHbaBFKDR0-X08DVGiXBNy3Aw4jqibB8CiInhht5RA3KcPcxNqReyobfFaPOpcRdjh-PudFWTsbPMneHx6oqcipiNQO3mdH4cai9LFg&lib=MqPVOHcCgv7cPyW_SkCyyynYr-en1dRGt';
-function applyRoleData(){
-  const session = getSession();
-  if(!session) return;
-
-  if(session.role === 'executive'){
-    allSystems = allData;
-    applyReadOnlyUI();
-    return;
-  }
-
-  allSystems = allData.filter(
-    s => s.user_id === session.uid
-  );
-}
-
-function applyReadOnlyUI(){
-  document.querySelectorAll(
-    '#add-system-btn, .edit-btn, .delete-btn'
-  ).forEach(el => el.remove());
-
-  document.body.classList.add('readonly');
-}
-document.getElementById('add-system-btn').addEventListener('click', () => {
-  if(!can('create')){
-    showToast('Read-only access', 'error');
-    return;
-  }
-  showModal(false);
-});
-
-.readonly button { display: none !important; } /* Hide all buttons in read-only mode */
-
-</script>
-
+  <!-- UI เดิมของคุณทั้งหมด (login / dashboard / modal) -->
+  
+  <!-- JS (ลำดับสำคัญมาก) -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/ui.js"></script>
 </body>
 </html>

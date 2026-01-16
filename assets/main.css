@@ -1,0 +1,7 @@
+body {
+  font-family: 'IBM Plex Sans Thai', sans-serif;
+}
+
+.readonly button {
+  display:none !important;
+}
