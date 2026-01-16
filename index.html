@@ -1,27 +1,118 @@
 <!doctype html>
-<html lang="th">
+<html lang="th" class="h-full">
 <head>
   <meta charset="UTF-8">
   <title>IT Dashboard Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai&display=swap" rel="stylesheet">
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Main CSS -->
   <link rel="stylesheet" href="./assets/css/main.css">
 </head>
 
-<body>
-  <!-- UI เดิมของคุณทั้งหมด (login / dashboard / modal) -->
-  
-  <!-- JS (ลำดับสำคัญมาก) -->
-  <script src="./assets/js/config.js"></script>
-  <script src="./assets/js/auth.js"></script>
-  <script src="./assets/js/api.js"></script>
-  <script src="./assets/js/data.js"></script>
-  <script src="./assets/js/ui.js"></script>
+<body class="h-full bg-slate-900 text-slate-100 font-['IBM_Plex_Sans_Thai']">
+
+<!-- ================= LOGIN SCREEN ================= -->
+<div id="login-screen" class="min-h-screen flex items-center justify-center">
+  <div class="bg-white text-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-8">
+    <h1 class="text-2xl font-bold mb-6 text-center">IT Dashboard</h1>
+
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label class="text-sm font-medium">Username</label>
+        <input id="login-username" type="text"
+          class="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring"
+          required>
+      </div>
+
+      <div>
+        <label class="text-sm font-medium">PIN (4 หลัก)</label>
+        <input id="login-pin" type="password" maxlength="4"
+          class="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring"
+          required>
+      </div>
+
+      <button type="submit"
+        class="w-full py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">
+        เข้าสู่ระบบ
+      </button>
+    </form>
+
+    <p class="text-xs text-center mt-6 text-slate-500">
+      Executive / Manager / Admin
+    </p>
+  </div>
+</div>
+
+<!-- ================= DASHBOARD ================= -->
+<div id="dashboard-screen" class="hidden min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-slate-800 border-b border-slate-700">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div>
+        <h2 class="text-xl font-bold">IT Dashboard</h2>
+        <p class="text-xs text-slate-400">
+          ผู้ใช้: <span id="current-username"></span>
+        </p>
+      </div>
+
+      <div class="flex gap-3">
+        <button id="add-system-btn"
+          class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 transition">
+          เพิ่มระบบ
+        </button>
+
+        <button id="logout-btn"
+          class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 transition">
+          ออกจากระบบ
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- KPI -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-slate-800 rounded-xl p-4">
+        <p class="text-sm text-slate-400">ทั้งหมด</p>
+        <p id="kpi-total" class="text-3xl font-bold">0</p>
+      </div>
+      <div class="bg-slate-800 rounded-xl p-4">
+        <p class="text-sm text-slate-400">ใช้งานได้</p>
+        <p id="kpi-active" class="text-3xl font-bold text-emerald-400">0</p>
+      </div>
+      <div class="bg-slate-800 rounded-xl p-4">
+        <p class="text-sm text-slate-400">ปิดปรับปรุง</p>
+        <p id="kpi-maintenance" class="text-3xl font-bold text-amber-400">0</p>
+      </div>
+      <div class="bg-slate-800 rounded-xl p-4">
+        <p class="text-sm text-slate-400">ขัดข้อง</p>
+        <p id="kpi-offline" class="text-3xl font-bold text-rose-400">0</p>
+      </div>
+    </div>
+
+    <!-- Systems -->
+    <div id="systems-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- render จาก JS -->
+    </div>
+
+  </main>
+</div>
+
+<!-- ================= JS ================= -->
+<script src="./assets/js/config.js"></script>
+<script src="./assets/js/auth.js"></script>
+<script src="./assets/js/api.js"></script>
+<script src="./assets/js/data.js"></script>
+<script src="./assets/js/ui.js"></script>
+
 </body>
 </html>
